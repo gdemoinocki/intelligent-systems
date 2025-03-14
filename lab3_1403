@@ -1,0 +1,280 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Reflection.Emit;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace is_lab_3
+{
+    // Определение пространства имен is_lab_3
+    public partial class Form1 : Form
+    {
+        // Определение класса Form1, который наследуется от класса Form
+        public Form1()
+        {
+            // Конструктор класса Form1
+            InitializeComponent(); // Инициализация компонентов формы
+            InitializeFlowerList(); // Вызов метода для инициализации списка цветов
+        }
+
+        private void InitializeFlowerList()
+        {
+            // Метод для инициализации списка цветов
+            for (int i = 0; i < flowers.Length; i++)
+            {
+                // Цикл по всем элементам массива flowers
+                FlowerList.Rows.Add(); // Добавление новой строки в таблицу FlowerList
+                FlowerList.Rows[i].Cells[0].Value = (i + 1).ToString(); // Заполнение первого столбца номером строки
+                FlowerList.Rows[i].Cells[1].Value = flowers[i]; // Заполнение второго столбца названием цветка
+                FlowerList.Rows[i].Cells[2].Value = $"{minQuantities[i]}-{maxQuantities[i]}"; // Заполнение третьего столбца диапазоном количества
+                FlowerList.Rows[i].Cells[3].Value = prices[i].ToString(); // Заполнение четвертого столбца ценой за единицу
+            }
+            var (minBudget, maxBudget) = CalculateBudgetRange(); // Вычисление диапазона бюджета
+            BudgetRangeLabel.Text = $"Диапазон бюджета: от {minBudget} до {maxBudget}"; // Отображение диапазона бюджета на форме
+        }
+
+        // Инициализация объекта Random для генерации случайных чисел
+        private Random random = new Random();
+
+        // Массив названий цветов
+        private string[] flowers = new string[]
+        {
+             "Роза", "Тюльпан", "Лилии", "Гвоздика", "Орхидея", "Пион", "Хризантема", "Рускус", "Ирис", "Гипсофила Паникулята уайт",
+             "Альстромерия", "Аспидистра", "Нарцисс", "Анемон", "Георгин", "Лаванда", "Подсолнух", "Мимоза", "Эустома", "Астра",
+             "Питтоспорум", "Гортензия", "Ландыш", "Маргаритка", "Аспарагус", "Ромашка", "Фиалка", "Цинния", "Календула", "Берграс",
+             "Писташ", "Петуния", "Папоротник", "Бегония", "Анютины глазки", "Лютик", "Крокус", "Гладиолус", "Лилия", "Мак",
+             "Гиацинт", "Гербера", "Герань", "Пижма", "Гипсофила Снежинка",  "Фрезия", "Сирень", "Клематис", "Эвкалипт", "Бархатцы"
+        };
+
+        // Массив цен для каждого цветка
+        private int[] prices = new int[]
+        {
+             173, 58, 243, 3, 228, 139, 49, 9, 23, 8, //3, 3
+             45, 5, 77, 25, 115, 9, 211, 25, 213, 227, //2, 4
+             7, 135, 55, 19, 269, 29, 8, 215, 89, 7, //3, 4
+             5, 175, 5, 6, 59, 149, 159, 109, 217, 69,//3, 2
+             27, 21, 237, 6, 5, 212, 329, 3, 4, 111 // 4, 2
+        };
+
+        // Массив минимальных количеств для каждого цветка
+        private int[] minQuantities = new int[]
+        {
+            1, 2, 1, 3, 1, 2, 2, 4, 2, 4,
+            1, 4, 3, 2, 2, 4, 2, 2, 3, 2,
+            7, 2, 3, 3, 1, 2, 1, 2, 2, 5,
+            7, 2, 5, 5, 1, 1, 2, 2, 2, 2,
+            1, 2, 3, 5, 5, 1, 1, 5, 7, 2,
+        };
+
+        // Массив максимальных количеств для каждого цветка
+        private int[] maxQuantities = new int[]
+        {
+            3, 4, 3, 9, 3, 4, 4, 8, 5, 8,
+            5, 6, 4, 5, 5, 8, 5, 5, 5, 5,
+            10, 5, 5, 5, 2, 4, 5, 4, 4, 8,
+            10, 4, 8, 8, 4, 3, 4, 4, 4, 5,
+            4, 5, 4, 8, 7, 3, 2, 7, 9, 5
+        };
+
+        // Метод для расчета диапазона цен
+        private (int minBudget, int maxBudget) CalculateBudgetRange()
+        {
+            int minBudget = 0; // Инициализация минимального бюджета
+            int maxBudget = 0; // Инициализация максимального бюджета
+            for (int i = 0; i < flowers.Length; i++)
+            {
+                // Цикл по всем цветам для расчета бюджета
+                minBudget += minQuantities[i] * prices[i]; // Расчет минимального бюджета
+                maxBudget += maxQuantities[i] * prices[i]; // Расчет максимального бюджета
+            }
+            return (minBudget, maxBudget); // Возврат диапазона бюджета
+        }
+
+        // Обработчик нажатия кнопки "Решить"
+        private void SolveButton_Click(object sender, EventArgs e)
+        {
+            // Проверка, введены ли бюджет и количество итераций
+            if (string.IsNullOrEmpty(BudgetTextBox.Text) || string.IsNullOrEmpty(IterationsTextBox.Text))
+            {
+                MessageBox.Show("Введите бюджет и количество итераций.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return; // Выход из метода, если данные не введены
+            }
+            int budget = Convert.ToInt32(BudgetTextBox.Text); // Получение введенного бюджета
+            int generations = Convert.ToInt32(IterationsTextBox.Text); // Получение количества итераций
+
+            var (minBudget, maxBudget) = CalculateBudgetRange(); // Расчет диапазона бюджета
+            if (budget < minBudget || budget > maxBudget)// Проверка, находится ли бюджет в допустимом диапазоне
+            {
+                MessageBox.Show($"Введенный бюджет вне допустимого диапазона. Пожалуйста, введите значение от {minBudget} до {maxBudget}.", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return; // Выход из метода, если бюджет вне диапазона
+            }
+            // Генерация начальной популяции
+            List<int[]> population = GenerateInitialPopulation(50);
+
+            // Генетический алгоритм
+            for (int gen = 0; gen < generations; gen++)
+            {
+                // Оценка приспособленности популяции
+                List<int> fitnessScores = EvaluateFitness(population, budget);
+                // Селекция родителей
+                List<int[]> parents = Selection(population, fitnessScores);
+
+                // Скрещивание и мутация
+                List<int[]> offspring = Crossover(parents);
+                Mutate(offspring, 10);
+
+                // Замена старой популяции на новую
+                population = offspring;
+            }
+
+            // Нахождение наилучшего решения
+            int[] bestSolution = FindBestSolution(population, budget);
+
+            // Обновление интерфейса
+            for (int i = 0; i < bestSolution.Length; i++)
+            {
+                FlowerList.Rows[i].Cells[4].Value = bestSolution[i].ToString(); // Отображение количества цветов в решении
+            }
+            // Расчет итоговой стоимости
+            int totalCost = CalculateTotalCost(bestSolution);
+            ResultLabel.Text = $"Итоговая стоимость: {totalCost}"; // Отображение итоговой стоимости
+            // Расчет разницы с бюджетом
+            int difference = Math.Abs(totalCost - budget);
+            label3.Text = $"Разница с бюджетом: {difference}"; // Отображение разницы с бюджетом
+        }
+
+        // Генерация начальной популяции
+        private List<int[]> GenerateInitialPopulation(int populationSize)
+        {
+            List<int[]> population = new List<int[]>(); // Инициализация списка популяции
+            for (int i = 0; i < populationSize; i++)
+            {
+                int[] individual = new int[flowers.Length]; // Создание нового индивида
+                for (int j = 0; j < individual.Length; j++)
+                {
+                    // Генерация случайного количества цветов в пределах диапазона
+                    individual[j] = random.Next(minQuantities[j], maxQuantities[j] + 1);
+                }
+                population.Add(individual); // Добавление индивида в популяцию
+            }
+            return population; // Возврат сгенерированной популяции
+        }
+
+        // Оценка приспособленности популяции
+        private List<int> EvaluateFitness(List<int[]> population, int budget)
+        {
+            List<int> fitnessScores = new List<int>(); // Инициализация списка оценок приспособленности
+            foreach (int[] individual in population)
+            {
+                // Расчет приспособленности как разницы между стоимостью и бюджетом
+                int fitness = Math.Abs(CalculateTotalCost(individual) - budget);
+                fitnessScores.Add(fitness); // Добавление оценки в список
+            }
+            return fitnessScores; // Возврат списка оценок
+        }
+
+        // Селекция родителей (выбор наиболее подходящих решений для создания следующего поколения)
+        private List<int[]> Selection(List<int[]> population, List<int> fitnessScores)
+        {
+            List<int[]> parents = new List<int[]>(); // Инициализация списка родителей
+            for (int i = 0; i < population.Count / 2; i++)
+            {
+                int index1 = RouletteWheelSelection(fitnessScores); // Выбор первого родителя
+                int index2 = RouletteWheelSelection(fitnessScores); // Выбор второго родителя
+                parents.Add(population[index1]); // Добавление первого родителя в список
+                parents.Add(population[index2]); // Добавление второго родителя в список
+            }
+            return parents; // Возврат списка родителей
+        }
+
+        // Выбор индивида методом рулетки
+        private int RouletteWheelSelection(List<int> fitnessScores)
+        {
+            int totalFitness = fitnessScores.Sum(); // Сумма всех оценок приспособленности
+            int randomValue = random.Next(totalFitness); // Генерация случайного значения
+            int cumulativeFitness = 0; // Инициализация накопленной суммы
+            for (int i = 0; i < fitnessScores.Count; i++)
+            {
+                cumulativeFitness += fitnessScores[i]; // Накопление суммы
+                if (cumulativeFitness >= randomValue)
+                {
+                    return i; // Возврат индекса выбранного индивида
+                }
+            }
+            return fitnessScores.Count - 1; // Возврат последнего индекса, если не выбран ни один
+        }
+
+        // Скрещивание родителей
+        private List<int[]> Crossover(List<int[]> parents)
+        {
+            List<int[]> offspring = new List<int[]>(); // Инициализация списка потомков
+            for (int i = 0; i < parents.Count; i += 2)
+            {
+                int[] parent1 = parents[i]; // Первый родитель
+                int[] parent2 = parents[i + 1]; // Второй родитель
+                int crossoverPoint = random.Next(parent1.Length); // Точка скрещивания
+                int[] child1 = new int[parent1.Length]; // Первый потомок
+                int[] child2 = new int[parent2.Length]; // Второй потомок
+                Array.Copy(parent1, child1, crossoverPoint); // Копирование части первого родителя в первого потомка
+                Array.Copy(parent2, crossoverPoint, child1, crossoverPoint, parent2.Length - crossoverPoint); // Копирование части второго родителя в первого потомка
+                Array.Copy(parent2, child2, crossoverPoint); // Копирование части второго родителя во второго потомка
+                Array.Copy(parent1, crossoverPoint, child2, crossoverPoint, parent1.Length - crossoverPoint); // Копирование части первого родителя во второго потомка
+                offspring.Add(child1); // Добавление первого потомка в список
+                offspring.Add(child2); // Добавление второго потомка в список
+                //MessageBox.Show("скрещивание", i + "p1"+ parent1.ToString() +"p2"+ parent2.ToString());
+            }
+            return offspring; // Возврат списка потомков
+        }
+
+        // Мутация потомков
+        private void Mutate(List<int[]> offspring, int mutationRate)
+        {
+            foreach (int[] individual in offspring)
+            {
+                for (int i = 0; i < individual.Length; i++)
+                {
+                    if (random.Next(100) < mutationRate)
+                    {
+                        // Мутация с заданной вероятностью
+                        individual[i] = random.Next(minQuantities[i], maxQuantities[i] + 1);
+                    }
+                }
+            }
+        }
+
+        // Нахождение наилучшего решения
+        private int[] FindBestSolution(List<int[]> population, int budget)
+        {
+            int[] bestSolution = null; // Инициализация лучшего решения
+            int bestFitness = int.MaxValue; // Инициализация лучшей приспособленности
+
+            foreach (int[] individual in population)
+            {
+                int fitness = Math.Abs(CalculateTotalCost(individual) - budget); // Расчет приспособленности
+                if (fitness < bestFitness)
+                {
+                    bestFitness = fitness; // Обновление лучшей приспособленности
+                    bestSolution = individual; // Обновление лучшего решения
+                }
+            }
+
+            return bestSolution; // Возврат лучшего решения
+        }
+
+        // Вычисление общей стоимости
+        private int CalculateTotalCost(int[] individual)
+        {
+            int totalCost = 0; // Инициализация общей стоимости
+            for (int i = 0; i < individual.Length; i++)
+            {
+                totalCost += individual[i] * prices[i]; // Расчет общей стоимости
+            }
+            return totalCost; // Возврат общей стоимости
+        }
+    }
+}
